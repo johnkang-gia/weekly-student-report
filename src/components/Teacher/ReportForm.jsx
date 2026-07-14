@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudents, getActiveTerm, submitReport } from '../../services/api';
+import { fetchStudents, getActiveTerm, submitReport, fetchSubjects } from '../../services/api';
 import { Send, CheckCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-const ReportForm = () => {
+const ReportForm = ({ sessionUser }) => {
+  const location = useLocation();
+  const prefill = location.state || {};
+
   const [students, setStudents] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [activeTerm, setActiveTerm] = useState(null);
   
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState(prefill.studentId || '');
+  const [selectedSubject, setSelectedSubject] = useState(prefill.subjectName || '담임');
   const [reportDate, setReportDate] = useState(new Date().toISOString().split('T')[0]);
   
   // 6 Fields
@@ -25,7 +31,12 @@ const ReportForm = () => {
   useEffect(() => {
     fetchStudents().then(setStudents);
     getActiveTerm().then(setActiveTerm);
-  }, []);
+    fetchSubjects().then(allSub => {
+      // Admin sees all, teachers see their own subjects
+      const mySubs = sessionUser?.role === 'admin' ? allSub : allSub.filter(s => s.teacherId === sessionUser?.id);
+      setSubjects(mySubs);
+    });
+  }, [sessionUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,6 +53,7 @@ const ReportForm = () => {
         studentId: selectedStudentId,
         termId: activeTerm.id,
         date: reportDate,
+        subject: selectedSubject,
         ...formData
       });
       
@@ -85,6 +97,13 @@ const ReportForm = () => {
 
       <form className="card" onSubmit={handleSubmit}>
         <div className="form-grid" style={{ marginBottom: '2rem' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">작성 분야 (과목)</label>
+            <select className="form-control" value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} required>
+              <option value="담임">주간 리포트 (담임)</option>
+              {subjects.map(sub => <option key={sub.id} value={sub.name}>{sub.name} (과목 교과)</option>)}
+            </select>
+          </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">학생 선택</label>
             <select 

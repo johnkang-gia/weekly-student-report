@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { fetchReports, fetchStudents, fetchTerms, fetchComments, addComment, submitReport } from '../../services/api';
-import { Search, BrainCircuit, Inbox, MessageSquare, Edit3, X, Save } from 'lucide-react';
+import { fetchReports, fetchArchivedReports, fetchStudents, fetchTerms, fetchComments, addComment, submitReport } from '../../services/api';
+import { Search, BrainCircuit, Inbox, MessageSquare, Edit3, X, Save, Archive, Clock } from 'lucide-react';
 
 const AdminDashboard = ({ sessionUser }) => {
   const [reports, setReports] = useState([]);
+  const [archivedReports, setArchivedReports] = useState([]);
   const [students, setStudents] = useState([]);
   const [terms, setTerms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [viewMode, setViewMode] = useState('active'); // 'active' | 'archived'
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,10 +25,11 @@ const AdminDashboard = ({ sessionUser }) => {
 
   const loadData = async () => {
     setIsLoading(true);
-    const [rData, sData, tData] = await Promise.all([
-      fetchReports(), fetchStudents(), fetchTerms()
+    const [rData, aData, sData, tData] = await Promise.all([
+      fetchReports(), fetchArchivedReports(), fetchStudents(), fetchTerms()
     ]);
     setReports(rData);
+    setArchivedReports(aData);
     setStudents(sData);
     setTerms(tData);
     setIsLoading(false);
@@ -62,7 +66,9 @@ const AdminDashboard = ({ sessionUser }) => {
     await loadData();
   };
 
-  const enrichedReports = reports.map(r => {
+  const currentDataList = viewMode === 'active' ? reports : archivedReports;
+
+  const enrichedReports = currentDataList.map(r => {
     const student = students.find(s => s.id === r.studentId) || {};
     const term = terms.find(t => t.id === r.termId) || {};
     return { ...r, studentName: student.name, className: student.className, grade: student.grade, termName: term.name };
@@ -79,21 +85,30 @@ const AdminDashboard = ({ sessionUser }) => {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="page-title">통합 대시보드</h1>
           <p className="page-subtitle">학생들의 주간 리포트를 열람하고 교직원 메모를 관리합니다.</p>
         </div>
+        
+        <div className="role-selector" style={{ padding: '0.25rem' }}>
+          <button className={`role-btn ${viewMode === 'active' ? 'active' : ''}`} onClick={() => { setViewMode('active'); setFilterTerm('all'); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}>
+            <Clock size={16} /> 현재 데이터
+          </button>
+          <button className={`role-btn ${viewMode === 'archived' ? 'active' : ''}`} onClick={() => { setViewMode('archived'); setFilterTerm('all'); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}>
+            <Archive size={16} /> 보관소(아카이브)
+          </button>
+        </div>
       </div>
 
-      <div className="filters-bar">
+      <div className="filters-bar" style={viewMode === 'archived' ? { borderLeft: '4px solid #6B7280' } : {}}>
         <div className="search-input">
           <Search className="search-icon" size={20} />
           <input type="text" className="form-control" placeholder="학생 이름 검색..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
         <select className="form-control filter-select" value={filterTerm} onChange={(e) => setFilterTerm(e.target.value)}>
-          <option value="all">모든 학기 보기</option>
-          {terms.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+          <option value="all">{viewMode === 'archived' ? '모든 과거 학기 보기' : '모든 현재 학기 보기'}</option>
+          {terms.filter(t => (viewMode === 'archived' ? t.isArchived : !t.isArchived)).map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
         <select className="form-control filter-select" value={filterClass} onChange={(e) => setFilterClass(e.target.value)}>
           <option value="all">모든 반 보기</option>
@@ -106,15 +121,19 @@ const AdminDashboard = ({ sessionUser }) => {
       ) : filteredReports.length > 0 ? (
         <div className="report-list">
           {filteredReports.map(report => (
-            <div key={report.id} className="report-item" style={{ cursor: 'pointer' }} onClick={() => openReportDetail(report)}>
+            <div key={report.id} className="report-item" style={{ cursor: 'pointer', opacity: viewMode === 'archived' ? 0.8 : 1 }} onClick={() => openReportDetail(report)}>
               <div className="report-header" style={{ marginBottom: '0.5rem' }}>
                 <div>
                   <div className="report-student">
                     {report.studentName} <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>({report.studentId})</span>
                     <span className="badge">{report.grade} {report.className}</span>
+                    {report.subject && report.subject !== '담임' && (
+                      <span className="badge" style={{ backgroundColor: '#DBEAFE', color: '#1D4ED8', marginLeft: '0.5rem' }}>과목: {report.subject}</span>
+                    )}
                   </div>
                   <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                    {report.date} | {report.termName}
+                    {report.date} | {report.termName} {viewMode === 'archived' && <span style={{ marginLeft: '0.5rem', color: '#6B7280' }}>(보관됨)</span>}
+                    {report.subject === '담임' && <span style={{ marginLeft: '0.5rem', color: '#059669' }}>• 주간리포트 (담임)</span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -133,6 +152,7 @@ const AdminDashboard = ({ sessionUser }) => {
         <div className="empty-state">
           <Inbox className="empty-state-icon" size={48} />
           <h3>결과가 없습니다</h3>
+          <p>{viewMode === 'archived' ? '보관소에 아카이브된 리포트가 없습니다.' : '현재 작성된 리포트가 없습니다.'}</p>
         </div>
       )}
 
@@ -145,16 +165,24 @@ const AdminDashboard = ({ sessionUser }) => {
               <X size={24} />
             </button>
 
-            <h2 style={{ marginBottom: '0.5rem' }}>{selectedReport.studentName} 리포트 상세</h2>
+            <h2 style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {selectedReport.studentName} 리포트 상세 
+              {selectedReport.subject && selectedReport.subject !== '담임' ? (
+                <span className="badge" style={{ backgroundColor: '#DBEAFE', color: '#1D4ED8', fontSize: '0.8rem' }}>과목: {selectedReport.subject}</span>
+              ) : (
+                <span className="badge badge-success" style={{ fontSize: '0.8rem' }}>주간리포트 (담임)</span>
+              )}
+              {viewMode === 'archived' && <span className="badge" style={{ backgroundColor: '#E5E7EB', color: '#374151', fontSize: '0.8rem' }}><Archive size={12}/> 보관됨 (읽기전용)</span>}
+            </h2>
             <div style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{selectedReport.date} | {selectedReport.termName}</div>
 
-            {sessionUser.role === 'admin' && !isEditing && (
+            {sessionUser.role === 'admin' && !isEditing && viewMode === 'active' && (
               <button className="btn btn-outline btn-sm" onClick={() => { setIsEditing(true); setEditForm(selectedReport); }} style={{ marginBottom: '1.5rem' }}>
                 <Edit3 size={16} /> 리포트 내용 수정 (관리자 전용)
               </button>
             )}
 
-            {isEditing ? (
+            {isEditing && viewMode === 'active' ? (
               <div className="form-grid" style={{ marginBottom: '2rem' }}>
                 <div className="form-group"><label>Academic</label><textarea className="form-control" value={editForm.academic} onChange={(e)=>setEditForm({...editForm, academic: e.target.value})} /></div>
                 <div className="form-group"><label>Improvement</label><textarea className="form-control" value={editForm.improvement} onChange={(e)=>setEditForm({...editForm, improvement: e.target.value})} /></div>

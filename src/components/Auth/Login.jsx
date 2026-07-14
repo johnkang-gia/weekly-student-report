@@ -59,9 +59,14 @@ const Login = ({ setSession }) => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <div className="login-header">
-          <h2>Weekly Report System V3</h2>
-          <p>{isLoginMode ? '아이디와 비밀번호를 입력해 로그인하세요.' : '새로운 계정 생성을 요청합니다.'}</p>
+        <div className="login-header" style={{ textAlign: 'center' }}>
+          <img 
+            src="/logo_login.png" 
+            alt="GIA Logo" 
+            style={{ height: '70px', objectFit: 'contain', marginBottom: '1.5rem', cursor: 'pointer', maxWidth: '100%' }} 
+            onClick={() => window.location.href = '/'}
+          />
+          <p style={{ marginTop: 0 }}>{isLoginMode ? '아이디와 비밀번호를 입력해 로그인하세요.' : '새로운 계정 생성을 요청합니다.'}</p>
         </div>
 
         {error && <div className="alert alert-danger">{error}</div>}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, Users, ClipboardList, CalendarDays, LogOut, Shield, Bug, UserCog } from 'lucide-react';
 
 import Login from './components/Auth/Login';
 import ReportForm from './components/Teacher/ReportForm';
 import StudentManage from './components/Teacher/StudentManage';
+import SubjectManage from './components/Teacher/SubjectManage';
+import ReportStatus from './components/Teacher/ReportStatus';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import TermManage from './components/Admin/TermManage';
 import UserManage from './components/Admin/UserManage';
@@ -61,12 +63,13 @@ function App() {
 
   const handleLogout = () => setSessionUser(null);
 
-  const Sidebar = () => (
-    <aside className="sidebar">
-      <div className="brand">
-        <BookOpen size={24} />
-        <span>Weekly Report V3</span>
-      </div>
+  const Sidebar = () => {
+    const navigate = useNavigate();
+    return (
+      <aside className="sidebar">
+        <div className="brand" onClick={() => navigate('/admin/dashboard')} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+          <img src="/logo_main.png" alt="GIA Logo" style={{ height: '50px', objectFit: 'contain', maxWidth: '100%' }} />
+        </div>
       
       <div style={{ padding: '0 1rem', marginBottom: '1.5rem' }}>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>접속 계정</div>
@@ -79,8 +82,14 @@ function App() {
         {(sessionUser.role === 'teacher' || sessionUser.role === 'admin') && (
           <>
             <div style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 700 }}>TEACHER</div>
+            <NavLink to="/teacher/status" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <Users size={20} /> 리포트 현황판
+            </NavLink>
             <NavLink to="/teacher/report" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <ClipboardList size={20} /> 리포트 작성
+            </NavLink>
+            <NavLink to="/teacher/subjects" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+              <BookOpen size={20} /> 나의 과목반 관리
             </NavLink>
           </>
         )}
@@ -121,7 +130,8 @@ function App() {
         </button>
       </nav>
     </aside>
-  );
+    );
+  };
 
   return (
     <ErrorBoundary>
@@ -138,8 +148,10 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/login" replace />} />
                   
-                  <Route path="/teacher/report" element={<ProtectedRoute allowedRoles={['teacher']}><ReportForm sessionUser={sessionUser} /></ProtectedRoute>} />
-                  <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={['teacher', 'staff']}><StudentManage /></ProtectedRoute>} />
+                  <Route path="/teacher/status" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><ReportStatus sessionUser={sessionUser} /></ProtectedRoute>} />
+                  <Route path="/teacher/report" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><ReportForm sessionUser={sessionUser} /></ProtectedRoute>} />
+                  <Route path="/teacher/subjects" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><SubjectManage sessionUser={sessionUser} /></ProtectedRoute>} />
+                  <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={['teacher', 'staff', 'admin']}><StudentManage /></ProtectedRoute>} />
                   
                   <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['teacher', 'staff', 'admin']}><AdminDashboard sessionUser={sessionUser} /></ProtectedRoute>} />
                   

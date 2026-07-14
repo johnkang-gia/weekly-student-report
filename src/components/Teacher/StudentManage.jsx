@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudents, saveStudent } from '../../services/api';
-import { UserPlus, Save, Users, CheckCircle } from 'lucide-react';
+import { fetchStudents, saveStudent, bulkSaveStudents } from '../../services/api';
+import { UserPlus, Save, Users, CheckCircle, ListPlus, X } from 'lucide-react';
 
 const StudentManage = () => {
   const [students, setStudents] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  // Bulk Upload State
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkText, setBulkText] = useState('');
+  const [bulkError, setBulkError] = useState('');
   
   const [formData, setFormData] = useState({ id: '', name: '', grade: '', className: '' });
 
@@ -18,6 +23,38 @@ const StudentManage = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleBulkUpload = async () => {
+    if (!bulkText.trim()) { setBulkError('텍스트를 입력해주세요.'); return; }
+    
+    // Parse TSV or CSV (Name \t Grade \t Class)
+    const lines = bulkText.split('\n').filter(l => l.trim().length > 0);
+    const parsedStudents = [];
+    
+    for (const line of lines) {
+      const cols = line.split(/[\t,]/).map(c => c.trim()).filter(Boolean);
+      if (cols.length >= 3) {
+        parsedStudents.push({ name: cols[0], grade: cols[1], className: cols[2] });
+      } else if (cols.length === 2) { // Just name and class
+        parsedStudents.push({ name: cols[0], grade: '', className: cols[1] });
+      } else if (cols.length === 1) { // Just name
+        parsedStudents.push({ name: cols[0], grade: '', className: '' });
+      }
+    }
+    
+    if (parsedStudents.length === 0) {
+      setBulkError('유효한 학생 데이터를 찾을 수 없습니다.');
+      return;
+    }
+    
+    if (window.confirm(`총 ${parsedStudents.length}명의 학생을 한 번에 등록하시겠습니까?`)) {
+      await bulkSaveStudents(parsedStudents);
+      setShowBulkModal(false);
+      setBulkText('');
+      setBulkError('');
+      await loadData();
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,11 +81,14 @@ const StudentManage = () => {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="page-title">학생 관리</h1>
-          <p className="page-subtitle">새로운 학생을 등록하거나 정보를 수정합니다. 학생 코드는 자동 부여됩니다.</p>
+          <p className="page-subtitle">리포트를 작성할 학생을 한 명씩 등록하거나 엑셀에서 복사해 대량으로 등록합니다.</p>
         </div>
+        <button className="btn btn-primary" onClick={() => setShowBulkModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <ListPlus size={16} /> 대량 등록 (복사/붙여넣기)
+        </button>
       </div>
 
       {isSuccess && (
@@ -156,6 +196,35 @@ const StudentManage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Bulk Upload Modal */}
+      {showBulkModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100 }}>
+          <div className="card" style={{ width: '100%', maxWidth: '600px', position: 'relative' }}>
+            <button onClick={() => setShowBulkModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            <h2 style={{ marginBottom: '0.5rem' }}>학생 대량 등록</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              엑셀이나 구글 시트에서 **[이름], [학년], [반]** 열을 그대로 복사해서 아래 상자에 붙여넣으세요.
+            </p>
+            
+            {bulkError && <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>{bulkError}</div>}
+            
+            <textarea 
+              className="form-control" 
+              rows={10} 
+              placeholder="홍길동	1학년	A반&#13;&#10;김철수	2학년	B반" 
+              value={bulkText} 
+              onChange={(e) => setBulkText(e.target.value)}
+              style={{ fontFamily: 'monospace', whiteSpace: 'pre' }}
+            />
+            
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+              <button className="btn btn-outline" onClick={() => setShowBulkModal(false)}>취소</button>
+              <button className="btn btn-primary" onClick={handleBulkUpload}>붙여넣은 데이터로 등록하기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
