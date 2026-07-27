@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { fetchUsers, updateUserStatus, registerUser } from '../../services/api';
+import { fetchUsers, updateUserStatus, registerUser, resetPassword, updateUserRole } from '../../services/api';
 import { Users, CheckCircle, XCircle, UserPlus } from 'lucide-react';
 
-const UserManage = () => {
+const UserManage = ({ sessionUser }) => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Create User Form state
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState({ username: '', password: '', name: '', role: 'teacher' });
+  const [formData, setFormData] = useState({ username: '', password: 'gia123', name: '', role: 'teacher' });
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -24,11 +24,34 @@ const UserManage = () => {
     await loadUsers();
   };
 
+  const handleResetPassword = async (userId) => {
+    if (window.confirm('이 사용자의 비밀번호를 기본 비밀번호(gia123)로 초기화하시겠습니까?')) {
+      const res = await resetPassword(userId);
+      if (res.success) {
+        alert('비밀번호가 초기화되었습니다.');
+      } else {
+        alert(res.message || '초기화 실패');
+      }
+    }
+  };
+
+  const handleUpgradeAdmin = async (userId) => {
+    if (window.confirm('이 사용자를 관리자(Admin) 권한으로 승급시키시겠습니까?')) {
+      const res = await updateUserRole(userId, 'admin');
+      if (res.success) {
+        alert('관리자로 승급되었습니다.');
+        await loadUsers();
+      } else {
+        alert('권한 변경에 실패했습니다.');
+      }
+    }
+  };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     const res = await registerUser({ ...formData, forceApprove: true });
     if (res.success) {
-      setFormData({ username: '', password: '', name: '', role: 'teacher' });
+      setFormData({ username: '', password: 'gia123', name: '', role: 'teacher' });
       setShowCreateForm(false);
       await loadUsers();
     } else {
@@ -95,8 +118,8 @@ const UserManage = () => {
                 <td style={{ fontWeight: 600 }}>{u.name || '-'}</td>
                 <td>{u.username}</td>
                 <td>
-                  <span className={`badge ${u.role === 'admin' ? 'badge-danger' : u.role === 'staff' ? 'badge-warning' : 'badge-info'}`}>
-                    {u.role === 'admin' ? '관리자' : u.role === 'staff' ? '교직원' : '선생님'}
+                  <span className={`badge ${u.role === 'developer' ? 'badge-primary' : u.role === 'admin' ? 'badge-danger' : u.role === 'staff' ? 'badge-warning' : 'badge-info'}`} style={u.role === 'developer' ? {backgroundColor: '#6366F1', color: 'white'} : {}}>
+                    {u.role === 'developer' ? '개발자' : u.role === 'admin' ? '관리자' : u.role === 'staff' ? '교직원' : '선생님'}
                   </span>
                 </td>
                 <td>
@@ -115,6 +138,10 @@ const UserManage = () => {
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       {u.status !== 'approved' && <button className="btn btn-sm btn-outline" style={{ borderColor: 'var(--success-color)', color: 'var(--success-color)' }} onClick={() => handleStatusChange(u.id, 'approved')}>승인</button>}
                       {u.status !== 'rejected' && <button className="btn btn-sm btn-outline" style={{ borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }} onClick={() => handleStatusChange(u.id, 'rejected')}>거절</button>}
+                      <button className="btn btn-sm btn-outline" onClick={() => handleResetPassword(u.id)}>비번 초기화</button>
+                      {(u.role === 'teacher' || u.role === 'staff') && u.status === 'approved' && (
+                        <button className="btn btn-sm btn-primary" onClick={() => handleUpgradeAdmin(u.id)}>관리자 승급</button>
+                      )}
                     </div>
                   )}
                 </td>

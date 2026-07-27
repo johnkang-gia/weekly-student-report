@@ -1,0 +1,980 @@
+{
+  "teachers": [
+    {
+      "id": "USR-T1",
+      "username": "aimie",
+      "password": "password123",
+      "name": "Aimie",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T2",
+      "username": "crystal",
+      "password": "password123",
+      "name": "Crystal",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T3",
+      "username": "carina",
+      "password": "password123",
+      "name": "Carina",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T4",
+      "username": "michelle",
+      "password": "password123",
+      "name": "Michelle",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T5",
+      "username": "jamie",
+      "password": "password123",
+      "name": "Jamie",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T6",
+      "username": "celine",
+      "password": "password123",
+      "name": "Celine",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T7",
+      "username": "yunsang",
+      "password": "password123",
+      "name": "Yunsang",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T8",
+      "username": "jandy",
+      "password": "password123",
+      "name": "Jandy",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T9",
+      "username": "katherine",
+      "password": "password123",
+      "name": "Katherine",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T10",
+      "username": "janelle",
+      "password": "password123",
+      "name": "Janelle",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T11",
+      "username": "anna",
+      "password": "password123",
+      "name": "Anna",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T12",
+      "username": "sarah",
+      "password": "password123",
+      "name": "Sarah",
+      "role": "teacher",
+      "status": "approved"
+    },
+    {
+      "id": "USR-T13",
+      "username": "eamonn",
+      "password": "password123",
+      "name": "Eamonn",
+      "role": "teacher",
+      "status": "approved"
+    }
+  ],
+  "classes": [
+    {
+      "id": "CLS-1A",
+      "grade": 1,
+      "className": "1A",
+      "teacherId": "USR-T1",
+      "subTeacherName": "Crystal"
+    },
+    {
+      "id": "CLS-1C",
+      "grade": 1,
+      "className": "1C",
+      "teacherId": "USR-T3",
+      "subTeacherName": "Michelle"
+    },
+    {
+      "id": "CLS-1J",
+      "grade": 1,
+      "className": "1J",
+      "teacherId": "USR-T5",
+      "subTeacherName": "Celine"
+    },
+    {
+      "id": "CLS-2Y",
+      "grade": 2,
+      "className": "2Y",
+      "teacherId": "USR-T7",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-2J",
+      "grade": 2,
+      "className": "2J",
+      "teacherId": "USR-T8",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-2K",
+      "grade": 2,
+      "className": "2K",
+      "teacherId": "USR-T9",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-3J",
+      "grade": 3,
+      "className": "3J",
+      "teacherId": "USR-T10",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-3A",
+      "grade": 3,
+      "className": "3A",
+      "teacherId": "USR-T11",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-4A",
+      "grade": 4,
+      "className": "4A",
+      "teacherId": "USR-T12",
+      "subTeacherName": ""
+    },
+    {
+      "id": "CLS-5E",
+      "grade": 5,
+      "className": "5E",
+      "teacherId": "USR-T13",
+      "subTeacherName": ""
+    }
+  ],
+  "students": [
+    {
+      "id": "STU-10000",
+      "name": "Benecia Kim",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10001",
+      "name": "Danu Kim",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10002",
+      "name": "Gyumin Shim",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10003",
+      "name": "Hasom Park",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10004",
+      "name": "Ian Ju",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10005",
+      "name": "Jay Kim",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10006",
+      "name": "Jennie Nam",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10007",
+      "name": "Lael Lee",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10008",
+      "name": "Rogan Kim",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10009",
+      "name": "Seojun Lee",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-100010",
+      "name": "Sophia Won",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-100011",
+      "name": "Tay Kwon",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-100012",
+      "name": "Zoe Han",
+      "grade": 1,
+      "className": "1A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10010",
+      "name": "Anna Kim",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10011",
+      "name": "Ayn Lee",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10012",
+      "name": "Bella Hwang",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10013",
+      "name": "Doha Park",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10014",
+      "name": "Eden Seo",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10015",
+      "name": "Harry Lee",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10016",
+      "name": "Joon Moon",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10017",
+      "name": "Hayoon Yon",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10018",
+      "name": "Jay Kim",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10019",
+      "name": "Jenny Go",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-100110",
+      "name": "Justin Jeon",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-100111",
+      "name": "Ruby Paik",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-100112",
+      "name": "Clara Park",
+      "grade": 1,
+      "className": "1C",
+      "status": "active"
+    },
+    {
+      "id": "STU-10020",
+      "name": "Brooklyn Shin",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10021",
+      "name": "Byeol Son",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10022",
+      "name": "Celine Kwak",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10023",
+      "name": "Eliana Lee",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10024",
+      "name": "Ellie Lee",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10025",
+      "name": "Eric Jeon",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10026",
+      "name": "Ian Hwang",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10027",
+      "name": "Isaac Lee",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10028",
+      "name": "Jinwoo Ko",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10029",
+      "name": "Max Lee",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100210",
+      "name": "Noah Roh",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100211",
+      "name": "Reina Park",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100212",
+      "name": "Sharlene Jung",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100213",
+      "name": "Sophia Hwang",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100214",
+      "name": "Yeni Lee",
+      "grade": 1,
+      "className": "1J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10030",
+      "name": "Grace Lim",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10031",
+      "name": "Maya Amelia Dowding",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10032",
+      "name": "Diane Lim",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10033",
+      "name": "Hans Kim",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10034",
+      "name": "Sophia Min",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10035",
+      "name": "Vivian Lee",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10036",
+      "name": "Henry Hayule Eom",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10037",
+      "name": "Danny Hong",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10038",
+      "name": "Kai Yoo",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10039",
+      "name": "Sean Hwang",
+      "grade": 2,
+      "className": "2Y",
+      "status": "active"
+    },
+    {
+      "id": "STU-10040",
+      "name": "Seohu Kang",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10041",
+      "name": "Jay Kim",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10042",
+      "name": "Wynter Jeong",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10043",
+      "name": "Elizabeth Lee",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10044",
+      "name": "Noel Min",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10045",
+      "name": "Ije Kang",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10046",
+      "name": "June Hwang",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10047",
+      "name": "E.L. Jeong",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10048",
+      "name": "Rain Jung",
+      "grade": 2,
+      "className": "2J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10050",
+      "name": "Jun Lee",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10051",
+      "name": "Sarah Choi",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10052",
+      "name": "Emma Jung",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10053",
+      "name": "Bom Cha",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10054",
+      "name": "Benny Lee",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10055",
+      "name": "Soo Ji",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10056",
+      "name": "Justin Lee",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10057",
+      "name": "Grace Lee",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10058",
+      "name": "Juhan Lim",
+      "grade": 2,
+      "className": "2K",
+      "status": "active"
+    },
+    {
+      "id": "STU-10060",
+      "name": "James Kwak",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10061",
+      "name": "Jaden Hong",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10062",
+      "name": "Theo Kim",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10063",
+      "name": "Gahin Nam",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10064",
+      "name": "Eagon Koh",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10065",
+      "name": "Seojin Kim",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10066",
+      "name": "Maria Paz Manoukian",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10067",
+      "name": "Dongha Kim",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10068",
+      "name": "Serena Jung",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10069",
+      "name": "Terry Kim",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-100610",
+      "name": "Blaire Lim",
+      "grade": 3,
+      "className": "3J",
+      "status": "active"
+    },
+    {
+      "id": "STU-10070",
+      "name": "Victoria Kim",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10071",
+      "name": "Jimin Kim",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10072",
+      "name": "Jay Yu",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10073",
+      "name": "Lina Lee",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10074",
+      "name": "Sunwoo Lim",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10075",
+      "name": "Lisa Jung",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10076",
+      "name": "Stella Jung",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10077",
+      "name": "Hayim Jung",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10078",
+      "name": "Hara Kang",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10079",
+      "name": "June Hwang",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-100710",
+      "name": "Janghoon Cho",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-100711",
+      "name": "Teddy Kwon",
+      "grade": 3,
+      "className": "3A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10080",
+      "name": "Jihyo Yim",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10081",
+      "name": "Seoyeon Choi",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10082",
+      "name": "Yesung Kang",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10083",
+      "name": "Danny Lee",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10084",
+      "name": "Rian Kim",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10085",
+      "name": "Skye Kang",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10086",
+      "name": "Teji Kim",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10087",
+      "name": "Teddy Kim",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10088",
+      "name": "Roy Lee",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10089",
+      "name": "Yoonseo Doh",
+      "grade": 4,
+      "className": "4A",
+      "status": "active"
+    },
+    {
+      "id": "STU-10090",
+      "name": "Justin Park",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10091",
+      "name": "Clara Moon",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10092",
+      "name": "Joy Kim",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10093",
+      "name": "Leo Kim",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10094",
+      "name": "Aaron Jung",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10095",
+      "name": "Olivia Jung",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10096",
+      "name": "Hael Kang",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10097",
+      "name": "Jacob Dylan Ma",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10098",
+      "name": "Ryeomyeong Kang",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-10099",
+      "name": "Juan Ignacio Manoukian",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-100910",
+      "name": "Henry Lee",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    },
+    {
+      "id": "STU-100911",
+      "name": "Jeum Park",
+      "grade": 5,
+      "className": "5E",
+      "status": "active"
+    }
+  ]
+}

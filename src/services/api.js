@@ -1,6 +1,8 @@
-// Mock 데이터 및 통신 로직 (v4.1)
+// --- 실전 연동 코드 V8.0 (Supabase Migration) ---
+import { cache, clearCache } from './api_cache';
+import { supabase } from './supabaseClient';
 
-// --- 보안: 단방향 해시 암호화 함수 ---
+// 단방향 해시 암호화 (SHA-256)
 export const hashPassword = async (password) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -9,205 +11,524 @@ export const hashPassword = async (password) => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-const initializeMockData = async () => {
-  if (!localStorage.getItem('v2_students')) localStorage.setItem('v2_students', JSON.stringify([]));
-  if (!localStorage.getItem('v2_terms')) localStorage.setItem('v2_terms', JSON.stringify([{ id: 'TERM-1', name: '기본 학기', isActive: true, isArchived: false }]));
-  if (!localStorage.getItem('v2_reports')) localStorage.setItem('v2_reports', JSON.stringify([]));
-  if (!localStorage.getItem('v4_archived_reports')) localStorage.setItem('v4_archived_reports', JSON.stringify([]));
-  if (!localStorage.getItem('v3_comments')) localStorage.setItem('v3_comments', JSON.stringify([]));
-  if (!localStorage.getItem('v3_errors')) localStorage.setItem('v3_errors', JSON.stringify([]));
-  if (!localStorage.getItem('v5_subjects')) localStorage.setItem('v5_subjects', JSON.stringify([]));
+// 낙관적 업데이트를 위한 로컬 상태 및 기본 에러 핸들러
+export const logError = (msg, stack) => console.error(msg, stack);
+export const fetchErrorLogs = async () => [];
+export const clearErrorLogs = async () => ({ success: true });
+
+// --- 데이터 로딩 ---
+export const prefetchAll = async () => {
+  const [
+    { data: students },
+    { data: classes },
+    { data: terms },
+    { data: users },
+    { data: comments },
+    { data: subjects },
+    { data: issues },
+    { data: reports }
+  ] = await Promise.all([
+    supabase.from('students').select('*'),
+    supabase.from('classes').select('*'),
+    supabase.from('terms').select('*'),
+    supabase.from('users').select('*'),
+    supabase.from('comments').select('*'),
+    supabase.from('subjects').select('*'),
+    supabase.from('issues').select('*'),
+    supabase.from('reports').select('*')
+  ]);
+
+  cache.students = students || [];
+  cache.classes = classes || [];
+  cache.terms = terms || [];
+  cache.users = users || [];
+  cache.comments = comments || [];
+  cache.subjects = subjects || [];
+  cache.issues = issues || [];
+  cache.reports = reports || [];
+  cache.isLoaded = true;
   
-  if (!localStorage.getItem('v4_users')) {
-    const hashedMasterPw = await hashPassword('ruddnjs87!');
-    const initUsers = [{ id: 'USR-MASTER', username: 'one2k', password: hashedMasterPw, role: 'admin', status: 'approved', name: '최고관리자' }];
-    localStorage.setItem('v4_users', JSON.stringify(initUsers));
-  }
-};
-
-initializeMockData();
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// --- System Error Logging ---
-export const logError = (errorMsg, stackTrace = '') => {
-  const errors = JSON.parse(localStorage.getItem('v3_errors') || '[]');
-  errors.unshift({ id: `ERR-${Date.now()}`, time: new Date().toLocaleString(), message: errorMsg, stack: stackTrace });
-  localStorage.setItem('v3_errors', JSON.stringify(errors));
-};
-export const fetchErrorLogs = async () => { await delay(200); return JSON.parse(localStorage.getItem('v3_errors') || '[]'); };
-export const clearErrorLogs = async () => { await delay(200); localStorage.setItem('v3_errors', JSON.stringify([])); return { success: true }; };
-
-// --- Users & Auth ---
-export const login = async (username, password) => {
-  await delay(400);
-  try {
-    const hashedInput = await hashPassword(password);
-    const users = JSON.parse(localStorage.getItem('v4_users') || '[]');
-    const user = users.find(u => u.username === username && u.password === hashedInput);
-    if (!user) return { success: false, message: '아이디 또는 비밀번호가 일치하지 않습니다.' };
-    if (user.status !== 'approved') return { success: false, message: '관리자의 승인을 대기 중인 계정입니다.' };
-    return { success: true, user: { id: user.id, username: user.username, role: user.role, name: user.name } };
-  } catch (err) {
-    logError('로그인 실패', err.toString()); return { success: false, message: '시스템 오류' };
-  }
-};
-
-export const registerUser = async (userData) => {
-  await delay(400);
-  try {
-    const users = JSON.parse(localStorage.getItem('v4_users') || '[]');
-    if (users.find(u => u.username === userData.username)) return { success: false, message: '이미 존재하는 아이디입니다.' };
-    
-    const hashedPassword = await hashPassword(userData.password);
-    users.push({
-      ...userData,
-      password: hashedPassword,
-      id: `USR-${Date.now()}`,
-      status: userData.role === 'admin' ? 'approved' : (userData.forceApprove ? 'approved' : 'pending') 
-    });
-    localStorage.setItem('v4_users', JSON.stringify(users));
-    return { success: true };
-  } catch (err) {
-    logError('유저생성 오류', err.toString()); return { success: false };
-  }
-};
-
-export const fetchUsers = async () => { await delay(300); return JSON.parse(localStorage.getItem('v4_users') || '[]'); };
-export const updateUserStatus = async (userId, newStatus) => {
-  await delay(300);
-  let users = JSON.parse(localStorage.getItem('v4_users') || '[]');
-  users = users.map(u => u.id === userId ? { ...u, status: newStatus } : u);
-  localStorage.setItem('v4_users', JSON.stringify(users));
   return { success: true };
 };
 
-// --- Comments ---
-export const fetchComments = async (studentId) => {
-  await delay(200); return JSON.parse(localStorage.getItem('v3_comments') || '[]').filter(c => c.studentId === studentId);
-};
-export const addComment = async (commentData) => {
-  await delay(400);
-  const comments = JSON.parse(localStorage.getItem('v3_comments') || '[]');
-  const newComment = { ...commentData, id: `CMT-${Date.now()}`, createdAt: new Date().toISOString() };
-  comments.push(newComment);
-  localStorage.setItem('v3_comments', JSON.stringify(comments));
-  return { success: true, data: newComment };
+// --- 인증 (Auth) ---
+export const login = async (username, password) => {
+  const { data: users, error } = await supabase.from('users').select('*').eq('username', username);
+  if (error || !users || users.length === 0) return { success: false, message: '아이디/비밀번호 불일치' };
+  
+  const user = users[0];
+  const hashedInput = await hashPassword(password);
+  
+  if (user.password !== hashedInput) return { success: false, message: '아이디/비밀번호 불일치' };
+  if (user.status !== 'approved') return { success: false, message: '승인 대기중' };
+  
+  if (user.username === 'one2k') {
+    user.role = 'developer';
+  }
+  
+  return { success: true, user };
 };
 
-// --- Terms & Archiving ---
-export const fetchTerms = async () => { await delay(300); return JSON.parse(localStorage.getItem('v2_terms') || '[]'); };
-export const getActiveTerm = async () => {
-  const terms = await fetchTerms(); return terms.find(t => t.isActive && !t.isArchived) || terms.find(t=>!t.isArchived) || terms[0];
+export const registerUser = async (userData) => {
+  const { data: existing } = await supabase.from('users').select('id').eq('username', userData.username);
+  if (existing && existing.length > 0) return { success: false, message: '중복 아이디' };
+  
+  const status = userData.forceApprove ? 'approved' : 'pending';
+  const hashedPassword = await hashPassword(userData.password);
+  
+  const newUser = {
+    id: `USR-${Date.now()}`,
+    username: userData.username,
+    password: hashedPassword,
+    name: userData.name,
+    role: userData.role || 'teacher',
+    status
+  };
+  
+  const { error } = await supabase.from('users').insert([newUser]);
+  if (error) return { success: false, message: error.message };
+  return { success: true, data: newUser };
 };
-export const saveTerm = async (termData) => {
-  await delay(400);
-  let terms = JSON.parse(localStorage.getItem('v2_terms') || '[]');
-  if (termData.id) {
-    if (termData.isActive) terms.forEach(t => t.isActive = false);
-    terms = terms.map(t => t.id === termData.id ? termData : t);
-  } else {
-    if (termData.isActive) terms.forEach(t => t.isActive = false);
-    terms.push({ ...termData, id: `TERM-${Date.now()}`, isArchived: false });
+
+export const fetchUsers = async () => {
+  const { data } = await supabase.from('users').select('*');
+  cache.users = data || [];
+  return cache.users;
+};
+
+export const updateUserStatus = async (userId, newStatus) => {
+  if (!cache.users) await fetchUsers();
+  cache.users = cache.users.map(u => u.id === userId ? { ...u, status: newStatus } : u);
+  await supabase.from('users').update({ status: newStatus }).eq('id', userId);
+  return { success: true };
+};
+
+export const updateUserRole = async (userId, newRole) => {
+  if (!cache.users) await fetchUsers();
+  cache.users = cache.users.map(u => u.id === userId ? { ...u, role: newRole } : u);
+  await supabase.from('users').update({ role: newRole }).eq('id', userId);
+  return { success: true };
+};
+
+export const changePassword = async (userId, oldPassword, newPassword) => {
+  if (!cache.users) await fetchUsers();
+  const user = cache.users.find(u => u.id === userId);
+  if (!user) return { success: false, message: '사용자를 찾을 수 없습니다.' };
+  
+  const hashedOld = await hashPassword(oldPassword);
+  if (user.password !== hashedOld) {
+    return { success: false, message: '기존 비밀번호가 일치하지 않습니다.' };
   }
-  localStorage.setItem('v2_terms', JSON.stringify(terms));
+  
+  const hashedNew = await hashPassword(newPassword);
+  cache.users = cache.users.map(u => u.id === userId ? { ...u, password: hashedNew } : u);
+  await supabase.from('users').update({ password: hashedNew }).eq('id', userId);
+  return { success: true };
+};
+
+export const resetPassword = async (userId) => {
+  if (!cache.users) await fetchUsers();
+  const hashedReset = await hashPassword('gia123');
+  cache.users = cache.users.map(u => u.id === userId ? { ...u, password: hashedReset } : u);
+  await supabase.from('users').update({ password: hashedReset }).eq('id', userId);
+  return { success: true };
+};
+
+export const updateUserProfile = async (userId, newName, newUsername) => {
+  if (!cache.users) await fetchUsers();
+  
+  // 중복 아이디 검사
+  const existing = cache.users.find(u => u.username === newUsername && u.id !== userId);
+  if (existing) {
+    return { success: false, message: '이미 사용 중인 아이디입니다.' };
+  }
+  
+  cache.users = cache.users.map(u => u.id === userId ? { ...u, name: newName, username: newUsername } : u);
+  await supabase.from('users').update({ name: newName, username: newUsername }).eq('id', userId);
+  return { success: true };
+};
+
+// --- 기타 모델들 ---
+export const fetchComments = async (studentId) => {
+  if (!cache.comments) {
+    const { data } = await supabase.from('comments').select('*');
+    cache.comments = data || [];
+  }
+  return cache.comments.filter(c => c.studentId === studentId || c.student_id === studentId);
+};
+export const addComment = async (data) => {
+  const newComment = {
+    id: `CMT-${Date.now()}`,
+    student_id: data.studentId,
+    author_id: data.authorId,
+    content: data.content,
+    date: data.date
+  };
+  await supabase.from('comments').insert([newComment]);
+  return { success: true };
+};
+
+export const fetchTerms = async () => {
+  const { data } = await supabase.from('terms').select('*');
+  cache.terms = data || [];
+  return cache.terms;
+};
+
+export const getActiveTerm = async () => {
+  const terms = await fetchTerms();
+  // String conversion for backwards compatibility with GAS strings
+  return terms.find(t => (String(t.is_active) === 'true' || t.is_active === true) && (String(t.is_archived) !== 'true' && t.is_archived !== true)) || 
+         terms.find(t => (String(t.is_archived) !== 'true' && t.is_archived !== true)) || terms[0];
+};
+
+export const saveTerm = async (data) => {
+  const isUpdate = !!data.id;
+  const newTerm = {
+    id: data.id || `TERM-${Date.now()}`,
+    name: data.name,
+    start_date: data.startDate,
+    end_date: data.endDate,
+    is_active: data.isActive,
+    is_archived: false
+  };
+  if (isUpdate) await supabase.from('terms').update(newTerm).eq('id', newTerm.id);
+  else await supabase.from('terms').insert([newTerm]);
   return { success: true };
 };
 
 export const archiveTerm = async (termId) => {
-  await delay(600);
-  try {
-    // 1. Term 마킹
-    let terms = JSON.parse(localStorage.getItem('v2_terms') || '[]');
-    terms = terms.map(t => t.id === termId ? { ...t, isArchived: true, isActive: false } : t);
-    localStorage.setItem('v2_terms', JSON.stringify(terms));
+  // Instead of moving to another table, just mark as archived
+  await supabase.from('terms').update({ is_archived: true }).eq('id', termId);
+  await supabase.from('reports').update({ is_archived: true }).eq('term_id', termId);
+  return { success: true };
+};
 
-    // 2. Report 분리 이동 (Reports -> Archived_Reports)
-    let reports = JSON.parse(localStorage.getItem('v2_reports') || '[]');
-    let archives = JSON.parse(localStorage.getItem('v4_archived_reports') || '[]');
-    
-    const reportsToArchive = reports.filter(r => r.termId === termId);
-    const reportsToKeep = reports.filter(r => r.termId !== termId);
-    
-    archives = [...archives, ...reportsToArchive];
-    
-    localStorage.setItem('v2_reports', JSON.stringify(reportsToKeep));
-    localStorage.setItem('v4_archived_reports', JSON.stringify(archives));
-    
-    return { success: true };
-  } catch (err) {
-    logError('아카이브 오류', err.toString()); return { success: false };
-  }
-}
+export const deleteArchivedReports = async (termId) => {
+  await supabase.from('reports').delete().eq('term_id', termId).eq('is_archived', true);
+  return { success: true };
+};
 
-// --- Subjects (과목반) ---
-export const fetchSubjects = async () => { await delay(300); return JSON.parse(localStorage.getItem('v5_subjects') || '[]'); };
-export const saveSubject = async (subjectData) => {
-  await delay(400);
-  let subjects = JSON.parse(localStorage.getItem('v5_subjects') || '[]');
-  if (subjectData.id) {
-    subjects = subjects.map(s => s.id === subjectData.id ? subjectData : s);
-  } else {
-    // Generate a color based on length or random
+export const fetchSubjects = async () => {
+  const { data } = await supabase.from('subjects').select('*');
+  cache.subjects = (data || []).map(s => ({
+    id: s.id,
+    name: s.name,
+    teacherId: s.teacher_id,
+    classId: s.class_id,
+    color: s.color,
+    studentIds: typeof s.student_ids === 'string' ? JSON.parse(s.student_ids) : (s.student_ids || [])
+  }));
+  return cache.subjects;
+};
+
+export const saveSubject = async (data) => {
+  const isUpdate = !!data.id;
+  let color = data.color;
+  if(!isUpdate) {
     const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'];
-    const color = colors[subjects.length % colors.length];
-    subjects.push({ ...subjectData, id: `SUB-${Date.now()}`, color });
+    color = colors[Math.floor(Math.random() * colors.length)];
   }
-  localStorage.setItem('v5_subjects', JSON.stringify(subjects));
-  return { success: true };
-};
-export const deleteSubject = async (subjectId) => {
-  await delay(400);
-  let subjects = JSON.parse(localStorage.getItem('v5_subjects') || '[]');
-  subjects = subjects.filter(s => s.id !== subjectId);
-  localStorage.setItem('v5_subjects', JSON.stringify(subjects));
+  
+  const newSubject = {
+    id: data.id || `SUB-${Date.now()}`,
+    name: data.name,
+    teacher_id: data.teacherId,
+    class_id: data.classId,
+    color: color,
+    student_ids: data.studentIds
+  };
+  
+  if (isUpdate) await supabase.from('subjects').update(newSubject).eq('id', newSubject.id);
+  else await supabase.from('subjects').insert([newSubject]);
+  
+  cache.subjects = null; // force reload next time
   return { success: true };
 };
 
-// --- Students ---
-export const fetchStudents = async () => { await delay(300); return JSON.parse(localStorage.getItem('v2_students') || '[]'); };
-export const saveStudent = async (studentData) => {
-  await delay(400);
-  let students = JSON.parse(localStorage.getItem('v2_students') || '[]');
-  if (studentData.id) { students = students.map(s => s.id === studentData.id ? studentData : s); } 
-  else { students.push({ ...studentData, id: `STU-${String(students.length + 1).padStart(3, '0')}` }); }
-  localStorage.setItem('v2_students', JSON.stringify(students));
+export const deleteSubject = async (id) => {
+  if (!cache.subjects) await fetchSubjects();
+  cache.subjects = cache.subjects.filter(s => s.id !== id);
+  await supabase.from('subjects').delete().eq('id', id);
   return { success: true };
 };
-export const bulkSaveStudents = async (studentList) => {
-  await delay(800);
-  let students = JSON.parse(localStorage.getItem('v2_students') || '[]');
-  const newStudents = studentList.map((s, idx) => ({ ...s, id: `STU-${String(students.length + idx + 1).padStart(3, '0')}` }));
-  students = [...students, ...newStudents];
-  localStorage.setItem('v2_students', JSON.stringify(students));
-  return { success: true, count: newStudents.length };
+
+export const fetchClasses = async () => {
+  const { data } = await supabase.from('classes').select('*');
+  cache.classes = (data || []).map(c => ({
+    id: c.id,
+    grade: c.grade,
+    className: c.class_name,
+    teacherId: c.teacher_id,
+    subTeacherId: c.sub_teacher_id
+  }));
+  return cache.classes;
+};
+
+export const saveClass = async (data) => {
+  const isUpdate = !!data.id;
+  const newClass = {
+    id: data.id || `CLS-${Date.now()}`,
+    grade: data.grade,
+    class_name: data.className,
+    teacher_id: data.teacherId,
+    sub_teacher_id: data.subTeacherId || ''
+  };
+  
+  if (isUpdate) await supabase.from('classes').update(newClass).eq('id', newClass.id);
+  else await supabase.from('classes').insert([newClass]);
+  
+  cache.classes = null;
+  return { success: true };
+};
+
+export const deleteClass = async (id) => {
+  if (!cache.classes) await fetchClasses();
+  cache.classes = cache.classes.filter(c => c.id !== id);
+  await supabase.from('classes').delete().eq('id', id);
+  return { success: true };
+};
+
+export const fetchStudents = async () => {
+  const { data } = await supabase.from('students').select('*');
+  cache.students = (data || []).map(s => ({
+    id: s.id,
+    name: s.name,
+    grade: s.grade,
+    className: s.class_name,
+    parentPhone: s.parent_phone,
+    note: s.note,
+    status: s.status
+  }));
+  return cache.students;
+};
+
+export const saveStudent = async (data) => {
+  const isUpdate = !!data.id;
+  const newStudent = {
+    id: data.id || `STU-${Date.now()}`,
+    name: data.name,
+    grade: data.grade,
+    class_name: data.className,
+    parent_phone: data.parentPhone,
+    note: data.note,
+    status: 'active'
+  };
+  
+  if (isUpdate) await supabase.from('students').update(newStudent).eq('id', newStudent.id);
+  else await supabase.from('students').insert([newStudent]);
+  
+  cache.students = null;
+  return { success: true };
+};
+
+export const bulkSaveStudents = async (studentsList) => {
+  const newStudents = studentsList.map((s, index) => ({
+    id: `STU-${Date.now()}-${index}`,
+    name: s.name,
+    grade: s.grade || '',
+    class_name: s.className || '',
+    parent_phone: s.parentPhone || '',
+    note: s.note || '',
+    status: 'active'
+  }));
+  
+  await supabase.from('students').insert(newStudents);
+  cache.students = null;
+  return { success: true };
+};
+
+export const archiveStudent = async (id) => {
+  if (!cache.students) await fetchStudents();
+  cache.students = cache.students.map(s => s.id === id ? { ...s, status: 'inactive' } : s);
+  await supabase.from('students').update({ status: 'inactive' }).eq('id', id);
+  return { success: true };
+};
+
+export const deleteStudent = async (id) => {
+  if (!cache.students) await fetchStudents();
+  cache.students = cache.students.filter(s => s.id !== id);
+  await supabase.from('students').delete().eq('id', id);
+  return { success: true };
 };
 
 // --- Reports ---
-const analyzeWithAI = (report) => {
-  const allText = `${report.academic} ${report.improvement} ${report.participation} ${report.behavior} ${report.social} ${report.teacherNote}`;
-  let tags = []; let aiNote = "";
-  if (allText.includes('어렵') || allText.includes('힘들어')) { tags.push({ type: 'warning', label: '학습 지원 필요' }); aiNote = "학습 보완 권장"; }
-  if (allText.includes('싸움') || allText.includes('갈등')) { tags.push({ type: 'danger', label: '교우관계 이슈' }); aiNote = "교우 관계 관찰 요망"; }
-  if (allText.includes('뛰어남') || allText.includes('우수')) { tags.push({ type: 'success', label: '우수 학생' }); }
-  if (tags.length === 0) { tags.push({ type: 'info', label: '특이사항 없음' }); aiNote = "원만한 생활 중입니다."; }
-  return { tags, aiNote };
+export const fetchReports = async (termId) => {
+  if (!cache.reports) {
+    const { data } = await supabase.from('reports').select('*');
+    cache.reports = data || [];
+  }
+  // Convert snake_case back to camelCase for the frontend
+  return cache.reports.map(r => ({
+    id: r.id,
+    studentId: r.student_id,
+    termId: r.term_id,
+    subject: r.subject,
+    academic: typeof r.academic === 'string' ? JSON.parse(r.academic) : r.academic,
+    improvement: typeof r.improvement === 'string' ? JSON.parse(r.improvement) : r.improvement,
+    participation: typeof r.participation === 'string' ? JSON.parse(r.participation) : r.participation,
+    behavior: typeof r.behavior === 'string' ? JSON.parse(r.behavior) : r.behavior,
+    social: typeof r.social === 'string' ? JSON.parse(r.social) : r.social,
+    teacherNote: r.teacher_note,
+    date: r.date,
+    aiTags: typeof r.ai_tags === 'string' ? JSON.parse(r.ai_tags) : r.ai_tags,
+    aiNote: r.ai_note,
+    status: r.status || 'published',
+    isArchived: r.is_archived
+  })).filter(r => !termId || r.termId === termId);
 };
 
-export const fetchReports = async () => { await delay(400); return JSON.parse(localStorage.getItem('v2_reports') || '[]'); };
-export const fetchArchivedReports = async () => { await delay(400); return JSON.parse(localStorage.getItem('v4_archived_reports') || '[]'); };
+export const fetchArchivedReports = async (termId) => {
+  const { data } = await supabase.from('reports').select('*').eq('is_archived', true).eq('term_id', termId);
+  return (data || []).map(r => ({
+    id: r.id,
+    studentId: r.student_id,
+    termId: r.term_id,
+    subject: r.subject,
+    academic: typeof r.academic === 'string' ? JSON.parse(r.academic) : r.academic,
+    improvement: typeof r.improvement === 'string' ? JSON.parse(r.improvement) : r.improvement,
+    participation: typeof r.participation === 'string' ? JSON.parse(r.participation) : r.participation,
+    behavior: typeof r.behavior === 'string' ? JSON.parse(r.behavior) : r.behavior,
+    social: typeof r.social === 'string' ? JSON.parse(r.social) : r.social,
+    teacherNote: r.teacher_note,
+    date: r.date,
+    aiTags: typeof r.ai_tags === 'string' ? JSON.parse(r.ai_tags) : r.ai_tags,
+    aiNote: r.ai_note,
+    status: r.status || 'published',
+    isArchived: r.is_archived
+  }));
+};
 
-export const submitReport = async (reportData) => {
-  await delay(800); // LockService 모의 지연
-  const reports = JSON.parse(localStorage.getItem('v2_reports') || '[]');
-  if (reportData.id) {
-    const updatedReports = reports.map(r => r.id === reportData.id ? { ...r, ...reportData } : r);
-    localStorage.setItem('v2_reports', JSON.stringify(updatedReports));
-    return { success: true };
+export const submitReport = async (data) => {
+  const isUpdate = !!data.id;
+  const newReport = {
+    id: data.id || `REP-${Date.now()}`,
+    student_id: data.studentId,
+    term_id: data.termId,
+    subject: data.subject,
+    academic: data.academic,
+    improvement: data.improvement,
+    participation: data.participation,
+    behavior: data.behavior,
+    social: data.social,
+    teacher_note: data.teacherNote,
+    date: data.date || new Date().toISOString().split('T')[0],
+    ai_tags: typeof data.aiTags === 'object' ? JSON.stringify(data.aiTags) : data.aiTags,
+    ai_note: data.aiNote,
+    status: data.status || 'published',
+    is_archived: false
+  };
+
+  if (!cache.reports) cache.reports = [];
+  
+  if (isUpdate) {
+    cache.reports = cache.reports.map(r => r.id === newReport.id ? { ...r, ...newReport, studentId: newReport.student_id, termId: newReport.term_id, teacherNote: newReport.teacher_note, aiTags: newReport.ai_tags, aiNote: newReport.ai_note, status: newReport.status } : r);
+    supabase.from('reports').update(newReport).eq('id', newReport.id); // Fire and forget
   } else {
-    const aiResult = analyzeWithAI(reportData);
-    const newReport = { ...reportData, id: `RPT-${Date.now()}`, createdAt: new Date().toISOString(), aiTags: aiResult.tags, aiNote: aiResult.aiNote };
-    reports.unshift(newReport);
-    localStorage.setItem('v2_reports', JSON.stringify(reports));
-    return { success: true, data: newReport };
+    cache.reports.unshift({ ...newReport, studentId: newReport.student_id, termId: newReport.term_id, teacherNote: newReport.teacher_note, aiTags: newReport.ai_tags, aiNote: newReport.ai_note, status: newReport.status });
+    supabase.from('reports').insert([newReport]); // Fire and forget
   }
+  
+  return { success: true, data: newReport };
+};
+
+export const deleteReport = async (id) => {
+  if (!cache.reports) await fetchReports();
+  cache.reports = cache.reports.filter(r => r.id !== id);
+  await supabase.from('reports').delete().eq('id', id);
+  return { success: true };
+};
+
+// --- Issues ---
+export const fetchIssues = async () => {
+  const { data } = await supabase.from('issues').select('*');
+  cache.issues = (data || []).map(i => ({
+    id: i.id,
+    authorId: i.author_id,
+    authorName: i.author_name,
+    issueType: i.issue_type,
+    content: i.content,
+    status: i.status,
+    date: i.date
+  }));
+  return cache.issues;
+};
+
+export const submitIssue = async (data) => {
+  const newIssue = {
+    id: `ISSUE-${Date.now()}`,
+    author_id: data.authorId,
+    author_name: data.authorName,
+    issue_type: data.issueType,
+    content: data.content,
+    status: 'open',
+    date: new Date().toISOString().split('T')[0]
+  };
+  await supabase.from('issues').insert([newIssue]);
+  cache.issues = null;
+  return { success: true };
+};
+
+export const resolveIssue = async (id) => {
+  await supabase.from('issues').update({ status: 'resolved' }).eq('id', id);
+  if (cache.issues) {
+    cache.issues = cache.issues.map(i => i.id === id ? { ...i, status: 'resolved' } : i);
+  }
+  return { success: true };
+};
+
+// --- Realtime Sync ---
+let realtimeSubscription = null;
+export const subscribeToRealtime = () => {
+  if (realtimeSubscription) return;
+  
+  realtimeSubscription = supabase.channel('public:reports')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reports' }, (payload) => {
+      // payload.new contains the inserted/updated row, payload.old contains the deleted row
+      if (!cache.reports) return;
+
+      if (payload.eventType === 'INSERT') {
+        const r = payload.new;
+        const newReport = {
+          id: r.id,
+          studentId: r.student_id,
+          termId: r.term_id,
+          subject: r.subject,
+          academic: typeof r.academic === 'string' ? JSON.parse(r.academic) : r.academic,
+          improvement: typeof r.improvement === 'string' ? JSON.parse(r.improvement) : r.improvement,
+          participation: typeof r.participation === 'string' ? JSON.parse(r.participation) : r.participation,
+          behavior: typeof r.behavior === 'string' ? JSON.parse(r.behavior) : r.behavior,
+          social: typeof r.social === 'string' ? JSON.parse(r.social) : r.social,
+          teacherNote: r.teacher_note,
+          date: r.date,
+          aiTags: typeof r.ai_tags === 'string' ? JSON.parse(r.ai_tags) : r.ai_tags,
+          aiNote: r.ai_note,
+          isArchived: r.is_archived
+        };
+        // Check if exists to avoid duplicates from optimistic UI
+        if (!cache.reports.find(x => x.id === newReport.id)) {
+          cache.reports.unshift(newReport);
+        }
+      } else if (payload.eventType === 'UPDATE') {
+        const r = payload.new;
+        cache.reports = cache.reports.map(x => x.id === r.id ? {
+          ...x,
+          subject: r.subject,
+          academic: typeof r.academic === 'string' ? JSON.parse(r.academic) : r.academic,
+          improvement: typeof r.improvement === 'string' ? JSON.parse(r.improvement) : r.improvement,
+          participation: typeof r.participation === 'string' ? JSON.parse(r.participation) : r.participation,
+          behavior: typeof r.behavior === 'string' ? JSON.parse(r.behavior) : r.behavior,
+          social: typeof r.social === 'string' ? JSON.parse(r.social) : r.social,
+          teacherNote: r.teacher_note,
+          aiTags: typeof r.ai_tags === 'string' ? JSON.parse(r.ai_tags) : r.ai_tags,
+          aiNote: r.ai_note,
+          isArchived: r.is_archived
+        } : x);
+      } else if (payload.eventType === 'DELETE') {
+        cache.reports = cache.reports.filter(x => x.id !== payload.old.id);
+      }
+      
+      // Dispatch global event for components to listen and re-render
+      window.dispatchEvent(new CustomEvent('realtime-sync'));
+    })
+    .subscribe();
 };

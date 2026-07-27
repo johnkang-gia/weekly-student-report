@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchTerms, saveTerm, archiveTerm } from '../../services/api';
+import { fetchTerms, saveTerm, archiveTerm, deleteArchivedReports } from '../../services/api';
 import { CalendarDays, CheckCircle, Clock, Archive } from 'lucide-react';
 
 const TermManage = () => {
@@ -35,6 +35,13 @@ const TermManage = () => {
     if (window.confirm('정말 이 학기를 보관(Archive) 처리 하시겠습니까?\n모든 데이터가 보관소로 이동되며 더 이상 메인 목록에서 수정할 수 없습니다.')) {
       await archiveTerm(termId);
       await loadTerms();
+    }
+  };
+
+  const handleDeleteArchive = async (termId) => {
+    if (window.confirm('⚠️ 경고: 정말 이 보관함의 데이터를 영구 삭제하시겠습니까?\n이 작업은 복구할 수 없습니다!')) {
+      await deleteArchivedReports(termId);
+      alert('해당 학기의 보관 데이터가 영구적으로 삭제되었습니다.');
     }
   };
 
@@ -92,7 +99,12 @@ const TermManage = () => {
                     </div>
                   )}
                   {t.isActive && <span style={{ fontSize: '0.85rem', color: 'var(--success-color)' }}>진행 중</span>}
-                  {t.isArchived && <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>보관 처리 완료</span>}
+                  {t.isArchived && (
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>보관 완료</span>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDeleteArchive(t.id)}>🗑️ 영구 삭제</button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

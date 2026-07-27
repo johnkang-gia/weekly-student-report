@@ -44,7 +44,10 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); colo
 .spin { animation: spin 1s linear infinite; }
 
 /* Sidebar */
-.sidebar { width: 260px; background-color: var(--surface-color); border-right: 1px solid var(--border-color); padding: 2rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; position: fixed; height: 100vh; left: 0; top: 0; z-index: 10; }
+.sidebar { width: 260px; background-color: var(--surface-color); border-right: 1px solid var(--border-color); padding: 2rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; position: fixed; height: 100vh; left: 0; top: 0; z-index: 10; overflow-y: auto; }
+/* 스크롤바 숨기기 (선택사항, 깔끔하게 보이게) */
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 10px; }
 .brand { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); padding-bottom: 2rem; text-align: center; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
 .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; border-radius: var(--radius-md); color: var(--text-secondary); font-weight: 500; cursor: pointer; transition: var(--transition); border: none; background: transparent; width: 100%; text-align: left; font-size: 1rem; text-decoration: none; }
 .nav-item:hover { background-color: var(--bg-color); color: var(--text-primary); }
@@ -133,4 +136,43 @@ textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.6; }
 .badge-btn:hover {
   filter: brightness(0.95);
   transform: translateY(-1px);
+}
+
+/* Modals */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+.modal-content { background-color: var(--surface-color); border-radius: var(--radius-lg); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+.modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface-color); z-index: 10; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.modal-body { padding: 1.5rem; flex: 1; }
+.modal-footer { padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem; position: sticky; bottom: 0; background: var(--surface-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.btn-close { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+.btn-close:hover { color: var(--danger-color); }
+
+/* --- Print Styles --- */
+@media print {
+  /* 불필요한 UI 숨김 */
+  .sidebar, .no-print, .brand, nav { display: none !important; }
+  
+  /* 메인 콘텐츠 여백 및 설정 초기화 */
+  body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .app-container { display: block !important; }
+  .main-content { margin-left: 0 !important; padding: 0 !important; max-width: 100% !important; }
+  
+  /* 페이지 분할 설정 */
+  .print-area { width: 100% !important; display: block !important; }
+  .print-section { page-break-inside: avoid; page-break-after: auto; }
+  .student-report-card { page-break-inside: avoid; border: 1px solid #ccc !important; box-shadow: none !important; }
+  
+  /* A4 사이즈 최적화 여백 */
+  @page { margin: 15mm; size: A4 portrait; }
+}
+
+.sidebar-group-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+  padding-left: 0.5rem;
+  white-space: nowrap;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudents, saveStudent, bulkSaveStudents } from '../../services/api';
-import { UserPlus, Save, Users, CheckCircle, ListPlus, X } from 'lucide-react';
+import { fetchStudents, saveStudent, bulkSaveStudents, archiveStudent } from '../../services/api';
+import { UserPlus, Save, Users, CheckCircle, ListPlus, X, Edit2, Archive } from 'lucide-react';
 
 const StudentManage = () => {
   const [students, setStudents] = useState([]);
@@ -16,13 +16,27 @@ const StudentManage = () => {
   const [formData, setFormData] = useState({ id: '', name: '', grade: '', className: '' });
 
   const loadData = async () => {
+    setIsLoading(true);
     const data = await fetchStudents();
-    setStudents(data);
+    setStudents(data.filter(s => s.status !== 'archived'));
+    setIsLoading(false);
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleArchive = async (student) => {
+    if (window.confirm(`${student.name} 학생을 정말 보관함으로 이동하시겠습니까? (퇴소/전학 처리)\n기존 데이터는 보존되며 활성 명단에서만 사라집니다.`)) {
+      const res = await archiveStudent(student.id);
+      if (res.success) {
+        alert("보관함으로 이동되었습니다.");
+        loadData();
+      } else {
+        alert("이동 실패");
+      }
+    }
+  };
 
   const handleBulkUpload = async () => {
     if (!bulkText.trim()) { setBulkError('텍스트를 입력해주세요.'); return; }
@@ -181,8 +195,13 @@ const StudentManage = () => {
                 <td style={{ fontWeight: 600 }}>{s.name}</td>
                 <td>{s.grade}</td>
                 <td>{s.className}</td>
-                <td>
-                  <button className="btn btn-sm btn-outline" onClick={() => handleEdit(s)}>수정</button>
+                <td style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-sm btn-outline" onClick={() => handleEdit(s)}>
+                    <Edit2 size={14} /> 수정
+                  </button>
+                  <button className="btn btn-sm" style={{ backgroundColor: '#FEF2F2', color: 'var(--danger-color)', borderColor: '#FCA5A5' }} onClick={() => handleArchive(s)}>
+                    <Archive size={14} /> 보관
+                  </button>
                 </td>
               </tr>
             ))}

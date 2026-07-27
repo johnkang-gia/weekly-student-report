@@ -30,9 +30,10 @@ const Login = ({ setSession }) => {
       setSession(res.user);
       
       // 권한별 첫 진입 페이지 라우팅
-      if (res.user.role === 'admin') navigate('/admin/dashboard');
-      else if (res.user.role === 'staff') navigate('/teacher/students');
-      else navigate('/teacher/report');
+      if (res.user.role === 'developer') navigate('/dev/dashboard');
+      else if (res.user.role === 'admin') navigate('/admin/dashboard');
+      else if (res.user.role === 'staff') navigate('/staff');
+      else navigate('/teacher/homeroom');
     } else {
       setError(res.message);
     }
@@ -88,9 +89,6 @@ const Login = ({ setSession }) => {
                 <KeyRound className="input-icon" size={18} />
                 <input type="password" className="form-control with-icon" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>
-                초기 마스터 관리자: one2k / ruddnjs87!
-              </small>
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" disabled={isLoading || !username || !password}>
@@ -109,6 +107,7 @@ const Login = ({ setSession }) => {
             <div className="role-selector" style={{ marginBottom: '1.5rem' }}>
               <button type="button" className={`role-btn ${role === 'teacher' ? 'active' : ''}`} onClick={() => setRole('teacher')} style={{ padding: '1rem' }}>선생님</button>
               <button type="button" className={`role-btn ${role === 'staff' ? 'active' : ''}`} onClick={() => setRole('staff')} style={{ padding: '1rem' }}>교직원</button>
+              <button type="button" className={`role-btn ${role === 'admin' ? 'active' : ''}`} onClick={() => setRole('admin')} style={{ padding: '1rem' }}>관리자</button>
             </div>
 
             <div className="form-group">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchReports, fetchArchivedReports, fetchStudents, fetchTerms, fetchComments, addComment, submitReport } from '../../services/api';
 import { Search, BrainCircuit, Inbox, MessageSquare, Edit3, X, Save, Archive, Clock } from 'lucide-react';
+import { parseBadges, renderBadgeGrid } from '../../utils/badgeHelper';
 
 const AdminDashboard = ({ sessionUser }) => {
   const [reports, setReports] = useState([]);
@@ -136,10 +137,14 @@ const AdminDashboard = ({ sessionUser }) => {
                     {report.subject === '담임' && <span style={{ marginLeft: '0.5rem', color: '#059669' }}>• 주간리포트 (담임)</span>}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {report.aiTags && report.aiTags.map((tag, idx) => (
-                    <span key={idx} className={`badge badge-${tag.type}`}>{tag.label}</span>
-                  ))}
+                <div 
+                  style={{ marginBottom: '1rem', cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); openReportDetail(report); }}
+                  title="뱃지를 클릭하면 이 리포트의 상세 평가를 볼 수 있습니다."
+                >
+                  <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem', borderRadius: '6px', border: '1px solid #E2E8F0', display: 'inline-block' }}>
+                    {renderBadgeGrid(parseBadges(report.aiTags))}
+                  </div>
                 </div>
               </div>
               <div style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

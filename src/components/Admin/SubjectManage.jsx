@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchSubjects, saveSubject, deleteSubject, fetchStudents } from '../../services/api';
+import { fetchSubjects, saveSubject, deleteSubject, fetchStudents, fetchUsers } from '../../services/api';
 import { Plus, Users, Trash2, CheckSquare, Square } from 'lucide-react';
 
 const SubjectManage = ({ sessionUser }) => {
@@ -8,16 +8,21 @@ const SubjectManage = ({ sessionUser }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [newSubjectName, setNewSubjectName] = useState('');
+  const [newSubjectTeacherId, setNewSubjectTeacherId] = useState('');
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [enrollSearch, setEnrollSearch] = useState('');
+  const [teachers, setTeachers] = useState([]);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [subData, stuData] = await Promise.all([fetchSubjects(), fetchStudents()]);
-    // Only show subjects owned by this user (or all if admin)
-    const mySubjects = sessionUser.role === 'admin' ? subData : subData.filter(s => s.teacherId === sessionUser.id);
+    const [subData, stuData, uData] = await Promise.all([fetchSubjects(), fetchStudents(), fetchUsers()]);
+    
+    const isAdmin = sessionUser.role === 'admin' || sessionUser.role === 'developer';
+    const mySubjects = isAdmin ? subData : subData.filter(s => s.teacherId === sessionUser.id);
+    
     setSubjects(mySubjects);
     setStudents(stuData);
+    setTeachers(uData.filter(u => u.role === 'teacher' || u.role === 'admin' || u.role === 'developer'));
     setIsLoading(false);
   };
 
@@ -26,8 +31,14 @@ const SubjectManage = ({ sessionUser }) => {
   const handleCreateSubject = async (e) => {
     e.preventDefault();
     if (!newSubjectName.trim()) return;
-    await saveSubject({ name: newSubjectName, teacherId: sessionUser.id, studentIds: [] });
+    
+    const assignTeacherId = (sessionUser.role === 'admin' || sessionUser.role === 'developer') 
+      ? (newSubjectTeacherId || sessionUser.id) 
+      : sessionUser.id;
+
+    await saveSubject({ name: newSubjectName, teacherId: assignTeacherId, studentIds: [] });
     setNewSubjectName('');
+    setNewSubjectTeacherId('');
     await loadData();
   };
 
@@ -72,6 +83,14 @@ const SubjectManage = ({ sessionUser }) => {
             <h3 style={{ marginBottom: '1rem' }}>과목반 목록</h3>
             <form onSubmit={handleCreateSubject} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
               <input type="text" className="form-control" placeholder="새 과목 이름 (예: 코딩반)" value={newSubjectName} onChange={(e) => setNewSubjectName(e.target.value)} required />
+              {(sessionUser.role === 'admin' || sessionUser.role === 'developer') && (
+                <select className="form-control" value={newSubjectTeacherId} onChange={(e) => setNewSubjectTeacherId(e.target.value)} required>
+                  <option value="">-- 담당 교사 선택 --</option>
+                  {teachers.map(t => (
+                    <option key={t.id} value={t.id}>{t.name} ({t.username})</option>
+                  ))}
+                </select>
+              )}
               <button type="submit" className="btn btn-primary"><Plus size={16} /></button>
             </form>
 
@@ -90,6 +109,11 @@ const SubjectManage = ({ sessionUser }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: sub.color }}></div>
                     <strong style={{ color: selectedSubject?.id === sub.id ? sub.color : 'var(--text-primary)' }}>{sub.name}</strong>
+                    {(sessionUser.role === 'admin' || sessionUser.role === 'developer') && (
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        ({teachers.find(t => t.id === sub.teacherId)?.name || '미배정'})
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <span className="badge">수강생 {(sub.studentIds || []).length}명</span>
