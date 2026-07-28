@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { fetchUsers, updateUserStatus, registerUser, resetPassword, updateUserRole } from '../../services/api';
-import { Users, CheckCircle, XCircle, UserPlus } from 'lucide-react';
+import { Users, CheckCircle, XCircle, UserPlus, LogIn } from 'lucide-react';
 
-const UserManage = ({ sessionUser }) => {
+const UserManage = ({ sessionUser, setSessionUser }) => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -135,12 +135,26 @@ const UserManage = ({ sessionUser }) => {
                   {u.id === 'USR-MASTER' ? (
                     <span style={{ color: 'var(--text-secondary)' }}>마스터 계정</span>
                   ) : (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {u.status !== 'approved' && <button className="btn btn-sm btn-outline" style={{ borderColor: 'var(--success-color)', color: 'var(--success-color)' }} onClick={() => handleStatusChange(u.id, 'approved')}>승인</button>}
                       {u.status !== 'rejected' && <button className="btn btn-sm btn-outline" style={{ borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }} onClick={() => handleStatusChange(u.id, 'rejected')}>거절</button>}
                       <button className="btn btn-sm btn-outline" onClick={() => handleResetPassword(u.id)}>비번 초기화</button>
                       {(u.role === 'teacher' || u.role === 'staff') && u.status === 'approved' && (
                         <button className="btn btn-sm btn-primary" onClick={() => handleUpgradeAdmin(u.id)}>관리자 승급</button>
+                      )}
+                      {/* Impersonation Button */}
+                      {(u.role === 'teacher' || u.role === 'staff') && u.status === 'approved' && sessionUser && (
+                        <button 
+                          className="btn btn-sm" 
+                          style={{ backgroundColor: '#EEF2FF', color: '#4F46E5', border: '1px solid #C7D2FE', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => {
+                            if (window.confirm(`${u.name} 선생님의 계정으로 접속하시겠습니까? (버그 확인용)`)) {
+                              setSessionUser({ ...u, originalUser: sessionUser });
+                            }
+                          }}
+                        >
+                          <LogIn size={14} /> 접속
+                        </button>
                       )}
                     </div>
                   )}

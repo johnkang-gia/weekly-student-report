@@ -255,6 +255,22 @@ function App() {
               <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Logout</span>
             </div>
           </button>
+          {sessionUser?.originalUser && (
+            <button 
+              className="nav-item" 
+              onClick={() => {
+                setSessionUser(sessionUser.originalUser);
+                alert("관리자 계정으로 복귀했습니다.");
+              }}
+              style={{ backgroundColor: '#FEF2F2', color: '#EF4444', borderTop: '1px solid #FCA5A5' }}
+            >
+              <RefreshCw size={20} style={{ flexShrink: 0 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2', alignItems: 'flex-start', whiteSpace: 'nowrap' }}>
+                <span style={{ fontWeight: 'bold' }}>관리자로 복귀</span>
+                <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>Return Admin</span>
+              </div>
+            </button>
+          )}
         </nav>
       </aside>
     );
@@ -300,7 +316,7 @@ function App() {
                     <Route path="/admin/subjects" element={<ProtectedRoute allowedRoles={['admin']}><SubjectManage sessionUser={sessionUser} /></ProtectedRoute>} />
                     <Route path="/admin/students" element={<ProtectedRoute allowedRoles={['admin']}><StudentManage sessionUser={sessionUser} /></ProtectedRoute>} />
                     <Route path="/admin/terms" element={<ProtectedRoute allowedRoles={['admin']}><TermManage sessionUser={sessionUser} /></ProtectedRoute>} />
-                    <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManage sessionUser={sessionUser} /></ProtectedRoute>} />
+                    <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin', 'developer']}><UserManage sessionUser={sessionUser} setSessionUser={setSessionUser} /></ProtectedRoute>} />
                     <Route path="/admin/errors" element={<ProtectedRoute allowedRoles={['admin']}><ErrorLogs sessionUser={sessionUser} /></ProtectedRoute>} />
                     
                     <Route path="/unauthorized" element={<div style={{ padding: '3rem', textAlign: 'center' }}><h2>권한이 없습니다.</h2><button onClick={() => setSessionUser(null)} className="btn btn-outline">로그아웃</button></div>} />

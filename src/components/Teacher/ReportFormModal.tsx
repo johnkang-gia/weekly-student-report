@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { submitReport, getActiveTerm, fetchPreviousReport } from '../../services/api';
-import { Loader, X, Check, FileText, Info } from 'lucide-react';
+import { Loader, X, Check, FileText, Info, History, Bookmark, BookmarkPlus } from 'lucide-react';
 import { parseBadges } from '../../utils/badgeHelper';
 
 const BADGE_OPTIONS = [
@@ -32,6 +32,7 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
   const [saveStatusMsg, setSaveStatusMsg] = useState('');
   const [previousReport, setPreviousReport] = useState<any>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [templates, setTemplates] = useState<{id: string, text: string}[]>([]);
   const autoSaveTimerRef = useRef<any>(null);
 
   const isAdminOrStaff = mode === 'admin' || mode === 'archive';
@@ -54,6 +55,12 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
       setActiveTerm(term);
     };
     init();
+
+    // Load templates from local storage
+    const savedTemplates = localStorage.getItem('teacherNoteTemplates');
+    if (savedTemplates) {
+      setTemplates(JSON.parse(savedTemplates));
+    }
   }, []);
 
   useEffect(() => {
@@ -163,6 +170,23 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
       alert("저장 실패");
     }
     setIsSaving(false);
+  };
+
+  const handleSaveTemplate = () => {
+    if (!formData.teacherNote.trim()) {
+      alert("저장할 종합 의견 내용을 먼저 작성해주세요.");
+      return;
+    }
+    const newTemplates = [...templates, { id: Date.now().toString(), text: formData.teacherNote }];
+    setTemplates(newTemplates);
+    localStorage.setItem('teacherNoteTemplates', JSON.stringify(newTemplates));
+    alert("현재 작성된 내용이 상용구로 저장되었습니다.");
+  };
+
+  const handleDeleteTemplate = (id) => {
+    const newTemplates = templates.filter(t => t.id !== id);
+    setTemplates(newTemplates);
+    localStorage.setItem('teacherNoteTemplates', JSON.stringify(newTemplates));
   };
 
   const isArchiveMode = mode === 'archive';
@@ -322,7 +346,43 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">교사 종합 의견 (Teacher's Note) - <em>학부모 리포트에 표시됨</em></label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '0.5rem' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>교사 종합 의견 (Teacher's Note) - <em>학부모 리포트에 표시됨</em></label>
+                  {!isReadOnly && (
+                    <button 
+                      type="button" 
+                      onClick={handleSaveTemplate}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', padding: '4px 8px', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: '4px', cursor: 'pointer', color: '#475569' }}
+                    >
+                      <BookmarkPlus size={14} /> 현재 내용 상용구로 저장
+                    </button>
+                  )}
+                </div>
+                
+                {/* Template List */}
+                {templates.length > 0 && !isReadOnly && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '0.5rem' }}>
+                    {templates.map(t => (
+                      <div key={t.id} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: '16px', padding: '2px 8px', fontSize: '0.8rem', color: '#4F46E5' }}>
+                        <span 
+                          style={{ cursor: 'pointer', marginRight: '4px' }} 
+                          onClick={() => { setFormData({...formData, teacherNote: formData.teacherNote + (formData.teacherNote ? '\n' : '') + t.text}); setIsDirty(true); }}
+                          title="클릭하여 내용 추가"
+                        >
+                          <Bookmark size={12} style={{ display: 'inline', marginRight: '2px' }} />
+                          {t.text.length > 15 ? t.text.substring(0, 15) + '...' : t.text}
+                        </span>
+                        <X 
+                          size={12} 
+                          style={{ cursor: 'pointer', color: '#94A3B8', marginLeft: '4px' }} 
+                          onClick={() => handleDeleteTemplate(t.id)} 
+                          title="삭제"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <textarea 
                   className="form-control" 
                   rows={4} 
