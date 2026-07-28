@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchReports, fetchStudents } from '../../services/api';
 import { Loader, BarChart3, TrendingUp, AlertCircle, Award } from 'lucide-react';
 import { parseBadges, hasWarningBadges, hasSuccessBadges } from '../../utils/badgeHelper';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const AdminStatistics = () => {
   const [reports, setReports] = useState([]);
@@ -60,6 +61,34 @@ const AdminStatistics = () => {
     })
     .slice(0, 5); // 상위 5명
 
+  // Prepare Subject Chart Data
+  const subjectCounts = {};
+  recentReports.forEach(r => {
+    subjectCounts[r.subject] = (subjectCounts[r.subject] || 0) + 1;
+  });
+  const subjectChartData = Object.entries(subjectCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Prepare Badge Distribution Data
+  let excellent = 0, good = 0, needsAttention = 0, poor = 0;
+  recentReports.forEach(r => {
+    const parsed = parseBadges(r.aiTags);
+    Object.values(parsed).flat().forEach(badge => {
+      if (badge === 'excellent') excellent++;
+      else if (badge === 'good') good++;
+      else if (badge === 'needs_attention') needsAttention++;
+      else if (badge === 'poor') poor++;
+    });
+  });
+
+  const pieData = [
+    { name: '탁월', value: excellent, color: '#3B82F6' },
+    { name: '양호', value: good, color: '#10B981' },
+    { name: '지도요망', value: needsAttention, color: '#F59E0B' },
+    { name: '집중지도', value: poor, color: '#EF4444' }
+  ].filter(d => d.value > 0);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -97,6 +126,53 @@ const AdminStatistics = () => {
             <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--danger-color)' }}>{warningCount}건</div>
           </div>
         </div>
+      </div>
+
+      {/* Recharts Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+        
+        {/* 과목별 리포트 현황 차트 */}
+        <div className="card">
+          <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>📊 과목별 작성 현황</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={subjectChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <YAxis axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: '#F1F5F9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                <Bar dataKey="count" name="작성 건수" fill="var(--primary-color)" radius={[4, 4, 0, 0]} barSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* 뱃지 전체 분포도 차트 */}
+        <div className="card">
+          <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>🎯 전체 평가 뱃지 분포</h3>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
