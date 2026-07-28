@@ -532,3 +532,38 @@ export const subscribeToRealtime = () => {
     })
     .subscribe();
 };
+
+export const fetchPreviousReport = async (studentId: string, subject: string) => {
+  if (!cache.reports) await fetchReports();
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const previousReports = cache.reports
+    .filter(r => 
+      r.student_id === studentId && 
+      r.subject === subject && 
+      new Date(r.date) < oneWeekAgo
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  if (previousReports.length === 0) return null;
+  
+  const r = previousReports[0];
+  return {
+    id: r.id,
+    studentId: r.student_id,
+    termId: r.term_id,
+    subject: r.subject,
+    academic: typeof r.academic === 'string' ? JSON.parse(r.academic) : r.academic,
+    improvement: typeof r.improvement === 'string' ? JSON.parse(r.improvement) : r.improvement,
+    participation: typeof r.participation === 'string' ? JSON.parse(r.participation) : r.participation,
+    behavior: typeof r.behavior === 'string' ? JSON.parse(r.behavior) : r.behavior,
+    social: typeof r.social === 'string' ? JSON.parse(r.social) : r.social,
+    teacherNote: r.teacher_note,
+    date: r.date,
+    aiTags: typeof r.ai_tags === 'string' ? JSON.parse(r.ai_tags) : r.ai_tags,
+    aiNote: r.ai_note,
+    status: r.status,
+    isArchived: r.is_archived
+  };
+};

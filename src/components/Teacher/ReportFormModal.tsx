@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { submitReport, getActiveTerm } from '../../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { submitReport, getActiveTerm, fetchPreviousReport } from '../../services/api';
 import { Loader, X, Check, FileText, Info } from 'lucide-react';
 import { parseBadges } from '../../utils/badgeHelper';
 
@@ -27,7 +27,12 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
   const [existingReportId, setExistingReportId] = useState(null);
   
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTerm, setActiveTerm] = useState(null);
+  const [activeTerm, setActiveTerm] = useState<any>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [saveStatusMsg, setSaveStatusMsg] = useState('');
+  const [previousReport, setPreviousReport] = useState<any>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const autoSaveTimerRef = useRef<any>(null);
 
   const isAdminOrStaff = mode === 'admin' || mode === 'archive';
   const mySubject = mode === 'homeroom' ? '담임' : subjectName;
@@ -65,11 +70,63 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
         evalBadges: parsedTags
       });
       setExistingReportId(targetReport.id);
+      setIsDirty(false); // Reset dirty flag on load
     } else {
       setFormData({ academic: '', improvement: '', participation: '', behavior: '', social: '', teacherNote: '', evalBadges: INITIAL_BADGES });
       setExistingReportId(null);
+      setIsDirty(false);
     }
-  }, [activeTab, reports]);
+
+    // Fetch history
+    const loadHistory = async () => {
+      const prev = await fetchPreviousReport(student.id, activeTab);
+      setPreviousReport(prev);
+    };
+    loadHistory();
+    
+    // Clear auto-save timer on tab switch
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    setSaveStatusMsg('');
+
+  }, [activeTab, reports, student.id]);
+
+  // Auto-save effect
+  useEffect(() => {
+    if (!isDirty || isReadOnly || !activeTerm) return;
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    setSaveStatusMsg('저장 중...');
+
+    autoSaveTimerRef.current = setTimeout(async () => {
+      const dataToSubmit = {
+        ...formData,
+        id: existingReportId,
+        studentId: student.id,
+        termId: activeTerm.id,
+        date: new Date().toISOString().split('T')[0],
+        subject: (mode === 'admin' || mode === 'archive') ? activeTab : mySubject,
+        aiTags: formData.evalBadges,
+        status: 'draft'
+      };
+      
+      const res = await submitReport(dataToSubmit);
+      if (res.success) {
+        setSaveStatusMsg(`자동 저장됨: ${new Date().toLocaleTimeString()}`);
+        if (!existingReportId && res.data) {
+           setExistingReportId(res.data.id);
+        }
+        setIsDirty(false);
+        onRefresh(); // To update dashboard badges
+      } else {
+        setSaveStatusMsg('자동 저장 실패');
+      }
+    }, 3000);
+
+    return () => clearTimeout(autoSaveTimerRef.current);
+  }, [formData, isDirty, isReadOnly, activeTerm, existingReportId, student.id, activeTab, mySubject, mode]);
 
   const handleSave = async (e, saveStatus = 'published') => {
     e.preventDefault();
@@ -132,6 +189,7 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
       if (currentBadges.length === 0) currentBadges = ['good']; // default fallback
       return { ...prev, evalBadges: { ...prev.evalBadges, [category]: currentBadges } };
     });
+    setIsDirty(true);
   };
 
   const renderBadgeGroup = (category) => {
@@ -236,55 +294,109 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
                   <span>학업 성취도 (Academic Performance)</span>
                 </label>
                 {renderBadgeGroup('academic')}
-                <textarea className="form-control" rows={3} value={formData.academic} onChange={e => setFormData({...formData, academic: e.target.value})} disabled={isReadOnly}></textarea>
+                <textarea className="form-control" rows={3} value={formData.academic} onChange={e => { setFormData({...formData, academic: e.target.value}); setIsDirty(true); }} disabled={isReadOnly}></textarea>
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">보완점 및 발전 방향 (Improvement & Goals)</label>
                 {renderBadgeGroup('improvement')}
-                <textarea className="form-control" rows={3} value={formData.improvement} onChange={e => setFormData({...formData, improvement: e.target.value})} disabled={isReadOnly}></textarea>
+                <textarea className="form-control" rows={3} value={formData.improvement} onChange={e => { setFormData({...formData, improvement: e.target.value}); setIsDirty(true); }} disabled={isReadOnly}></textarea>
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="form-label">수업 참여도 (Class Participation)</label>
                 {renderBadgeGroup('participation')}
-                <textarea className="form-control" rows={3} value={formData.participation} onChange={e => setFormData({...formData, participation: e.target.value})} disabled={isReadOnly}></textarea>
+                <textarea className="form-control" rows={3} value={formData.participation} onChange={e => { setFormData({...formData, participation: e.target.value}); setIsDirty(true); }} disabled={isReadOnly}></textarea>
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">생활 태도 (Behavior)</label>
+                <label className="form-label">생활 태도 및 성실성 (Behavior & Attitude)</label>
                 {renderBadgeGroup('behavior')}
-                <textarea className="form-control" rows={3} value={formData.behavior} onChange={e => setFormData({...formData, behavior: e.target.value})} disabled={isReadOnly}></textarea>
+                <textarea className="form-control" rows={3} value={formData.behavior} onChange={e => { setFormData({...formData, behavior: e.target.value}); setIsDirty(true); }} disabled={isReadOnly}></textarea>
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">교우 관계 (Social Relations)</label>
+                <label className="form-label">교우 관계 및 협동심 (Social Skills)</label>
                 {renderBadgeGroup('social')}
-                <textarea className="form-control" rows={2} value={formData.social} onChange={e => setFormData({...formData, social: e.target.value})} disabled={isReadOnly}></textarea>
+                <textarea className="form-control" rows={3} value={formData.social} onChange={e => { setFormData({...formData, social: e.target.value}); setIsDirty(true); }} disabled={isReadOnly}></textarea>
               </div>
 
               <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                <label className="form-label">
-                  선생님 코멘트 (Teacher's Note) 
-                  {needsReason && 
-                    <span style={{ color: 'var(--danger-color)', fontSize: '0.85rem', marginLeft: '0.5rem', fontWeight: 'bold' }}>* 뱃지 사유를 적어주세요. (Please provide reason for badges)</span>
-                  }
-                </label>
-                <textarea className="form-control" rows={3} value={formData.teacherNote} onChange={e => setFormData({...formData, teacherNote: e.target.value})} disabled={isReadOnly} placeholder="특이사항 란에 출력됩니다. (Will be shown as special notes on the report)"></textarea>
+                <label className="form-label">교사 종합 의견 (Teacher's Note) - <em>학부모 리포트에 표시됨</em></label>
+                <textarea 
+                  className="form-control" 
+                  rows={4} 
+                  placeholder="학부모님께 전달할 종합적인 코멘트를 작성해주세요."
+                  value={formData.teacherNote} 
+                  onChange={e => { setFormData({...formData, teacherNote: e.target.value}); setIsDirty(true); }}
+                  disabled={isReadOnly}
+                ></textarea>
               </div>
             </div>
-
-            {!isReadOnly && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
-                <button type="button" className="btn btn-outline" onClick={onClose}>취소 (Cancel)</button>
-                <button type="button" className="btn" style={{ backgroundColor: '#F1F5F9', color: '#475569', border: '1px solid #CBD5E1' }} disabled={isSaving} onClick={(e) => handleSave(e, 'draft')}>
-                  {isSaving ? <Loader className="spin" size={18} /> : '임시저장 (Save Draft)'}
-                </button>
-                <button type="button" className="btn btn-primary" disabled={isSaving} onClick={(e) => handleSave(e, 'published')}>
-                  {isSaving ? <Loader className="spin" size={18} /> : (existingReportId && subjectReports[activeTab]?.status === 'published' ? '발행 수정 (Update)' : '발행하기 (Publish)')}
-                </button>
+            
+            {/* History Panel */}
+            {showHistory && previousReport && (
+              <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#334155' }}>
+                  <History size={18} /> 지난 주 리포트 ({previousReport.date})
+                </h4>
+                <div style={{ fontSize: '0.9rem', color: '#475569' }}>
+                  <p><strong>학업 성취도:</strong> {previousReport.academic}</p>
+                  <p><strong>보완점:</strong> {previousReport.improvement}</p>
+                  <p><strong>참여도:</strong> {previousReport.participation}</p>
+                  <p><strong>생활 태도:</strong> {previousReport.behavior}</p>
+                  <p><strong>교우 관계:</strong> {previousReport.social}</p>
+                  <p><strong>교사 의견:</strong> {previousReport.teacherNote}</p>
+                </div>
               </div>
             )}
+            {showHistory && !previousReport && (
+              <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#F8FAFC', borderRadius: '8px', border: '1px solid #E2E8F0', textAlign: 'center', color: '#64748B' }}>
+                지난 주 리포트가 없습니다.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <button type="button" className="btn btn-secondary" onClick={onClose}>취소 (Cancel)</button>
+                <span style={{ fontSize: '0.85rem', color: '#64748B', fontStyle: 'italic' }}>
+                  {saveStatusMsg}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowHistory(!showHistory)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <History size={16} /> {showHistory ? '과거 기록 닫기' : '지난주 기록 보기'}
+                </button>
+                
+                {!isReadOnly && (
+                  <>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={(e) => handleSave(e, 'draft')}
+                      disabled={isSaving}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#FEF3C7', color: '#D97706', borderColor: '#FDE68A' }}
+                    >
+                      {isSaving ? <Loader size={16} className="spin" /> : <Save size={16} />} 임시저장
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      onClick={(e) => handleSave(e, 'published')}
+                      disabled={isSaving}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      {isSaving ? <Loader size={16} className="spin" /> : <Check size={16} />} 발행하기
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
           </form>
         </div>
       </div>
