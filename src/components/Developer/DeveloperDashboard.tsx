@@ -42,9 +42,22 @@ const DeveloperDashboard = ({ sessionUser }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div className="page-header" style={{ marginBottom: 0 }}>
-        <h1 className="page-title"><Terminal className="icon" /> 개발자 대시보드</h1>
-        <p className="page-subtitle">시스템 상태 모니터링 및 사용자 문의(버그/기능) 사항을 관리합니다.</p>
+      <div className="page-header" style={{ marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="page-title"><Terminal className="icon" /> 개발자 대시보드</h1>
+          <p className="page-subtitle">시스템 상태 모니터링 및 사용자 문의(버그/기능) 사항을 관리합니다.</p>
+        </div>
+        <button 
+          className="btn btn-danger" 
+          onClick={() => {
+            if (window.confirm("Sentry/Slack 연동 테스트를 위해 고의로 에러를 발생시킵니다. 계속하시겠습니까?")) {
+              throw new Error("Sentry 연동 테스트용 에러입니다! (Sentry Test Error)");
+            }
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#DC2626', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer' }}
+        >
+          <AlertTriangle size={16} /> 연동 테스트 (에러 발생)
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
