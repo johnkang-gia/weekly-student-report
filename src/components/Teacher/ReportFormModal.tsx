@@ -67,13 +67,19 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
     const targetReport = subjectReports[activeTab];
     if (targetReport) {
       const parsedTags = parseBadges(targetReport.aiTags);
+      const ensureString = (val) => {
+        if (!val) return '';
+        if (typeof val === 'string') return val;
+        try { return JSON.stringify(val); } catch (e) { return String(val); }
+      };
+
       setFormData({
-        academic: targetReport.academic || '',
-        improvement: targetReport.improvement || '',
-        participation: targetReport.participation || '',
-        behavior: targetReport.behavior || '',
-        social: targetReport.social || '',
-        teacherNote: targetReport.teacherNote || '',
+        academic: ensureString(targetReport.academic),
+        improvement: ensureString(targetReport.improvement),
+        participation: ensureString(targetReport.participation),
+        behavior: ensureString(targetReport.behavior),
+        social: ensureString(targetReport.social),
+        teacherNote: ensureString(targetReport.teacherNote),
         evalBadges: parsedTags
       });
       setExistingReportId(targetReport.id);

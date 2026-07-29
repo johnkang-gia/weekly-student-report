@@ -47,7 +47,10 @@ class ErrorBoundary extends React.Component {
 }
 
 function App() {
-  const [sessionUser, setSessionUser] = useState(null); 
+  const [sessionUser, setSessionUser] = useState(() => {
+    const saved = localStorage.getItem('sessionUser');
+    return saved ? JSON.parse(saved) : null;
+  }); 
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -67,6 +70,15 @@ function App() {
       });
     }
   }, [sessionUser, isDataLoaded, isPrefetching]);
+
+  React.useEffect(() => {
+    if (sessionUser) {
+      localStorage.setItem('sessionUser', JSON.stringify(sessionUser));
+    } else {
+      localStorage.removeItem('sessionUser');
+    }
+  }, [sessionUser]);
+
 
   const isAdminOrDeveloper = sessionUser?.role === 'admin' || sessionUser?.role === 'developer';
   const isDeveloper = sessionUser?.role === 'developer';
