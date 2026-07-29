@@ -204,7 +204,7 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
   const handleBadgeToggle = (category, value) => {
     if (isReadOnly) return;
     setFormData(prev => {
-      let currentBadges = [...(prev.evalBadges[category] || [])];
+      let currentBadges = [...(prev?.evalBadges?.[category] || [])];
       if (currentBadges.includes(value)) {
         currentBadges = currentBadges.filter(b => b !== value);
       } else {
@@ -217,7 +217,7 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
   };
 
   const renderBadgeGroup = (category) => {
-    const currentBadges = formData.evalBadges[category] || ['good'];
+    const currentBadges = formData?.evalBadges?.[category] || ['good'];
     return (
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
         {BADGE_OPTIONS.map(badge => {
@@ -251,7 +251,7 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
     );
   };
 
-  const allSelectedBadges = Object.values(formData.evalBadges).flat();
+  const allSelectedBadges = Object.values(formData?.evalBadges || {}).flat();
   const needsReason = allSelectedBadges.includes('excellent') || allSelectedBadges.includes('warning') || allSelectedBadges.includes('bad');
 
   return (
