@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { submitReport, getActiveTerm, fetchPreviousReport } from '../../services/api';
-import { Loader, X, Check, FileText, Info, History, Bookmark, BookmarkPlus } from 'lucide-react';
+import { Loader, X, Check, FileText, Info, History, Bookmark, BookmarkPlus, Save } from 'lucide-react';
 import { parseBadges } from '../../utils/badgeHelper';
 
 const BADGE_OPTIONS = [
@@ -42,6 +42,9 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
   reports.forEach(r => {
     subjectReports[r.subject] = r;
   });
+
+  const isArchiveMode = mode === 'archive';
+  const isReadOnly = isArchiveMode || (mode !== 'admin' && activeTab !== mySubject);
 
   useEffect(() => {
     if (isAdminOrStaff && !activeTab) {
@@ -195,8 +198,6 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
     localStorage.setItem('teacherNoteTemplates', JSON.stringify(newTemplates));
   };
 
-  const isArchiveMode = mode === 'archive';
-  const isReadOnly = isArchiveMode || (mode !== 'admin' && activeTab !== mySubject);
 
   let tabs = [];
   if (mode === 'admin' || isArchiveMode) {
