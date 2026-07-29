@@ -227,8 +227,8 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
               key={badge.value}
               onClick={() => handleBadgeToggle(category, badge.value)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
-                padding: '4px 10px',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '6px 12px',
                 border: isChecked ? `2px solid ${badge.border}` : '1px solid #CBD5E1',
                 borderRadius: '20px',
                 backgroundColor: isChecked ? badge.bg : 'white',
@@ -238,11 +238,12 @@ const ReportFormModal = ({ student, sessionUser, reports, onClose, onRefresh, mo
                 fontWeight: isChecked ? 'bold' : 'normal',
                 color: isChecked ? badge.color : '#475569',
                 transition: 'all 0.2s',
-                userSelect: 'none'
+                userSelect: 'none',
+                whiteSpace: 'nowrap'
               }}
             >
               <span>{badge.emoji}</span>
-              <span>{badge.label} <span style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 'normal' }}>({badge.enLabel})</span></span>
+              <span style={{ wordBreak: 'keep-all' }}>{badge.label} <span style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 'normal' }}>({badge.enLabel})</span></span>
             </div>
           );
         })}

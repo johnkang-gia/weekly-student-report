@@ -90,20 +90,20 @@ const HomeroomDashboard = ({ sessionUser }) => {
                 <div 
                   key={student.id} 
                   className="hover-bg"
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}
+                  style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer' }}
                   onClick={() => handleStudentClick(student)}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 700 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: '160px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 700, flexShrink: 0 }}>
                       {student.name.charAt(0)}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{student.name}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{student.id}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ fontWeight: 600, fontSize: '1.1rem', wordBreak: 'keep-all' }}>{student.name}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>{student.id}</div>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
                     {/* 담임 리포트 뱃지 */}
                     {homeroomReport ? (
                       homeroomReport.status === 'draft' ? (
@@ -123,12 +123,12 @@ const HomeroomDashboard = ({ sessionUser }) => {
 
                     {/* 타과목 리포트 뱃지 */}
                     {otherReports.map(r => (
-                      <span key={r.id} className="badge badge-primary" style={{ opacity: 0.8 }}>
+                      <span key={r.id} className="badge badge-primary" style={{ opacity: 0.8, whiteSpace: 'nowrap', flexShrink: 0 }}>
                         {r.subject}
                       </span>
                     ))}
                     
-                    <span style={{ color: 'var(--primary-color)', marginLeft: '1rem' }}><Edit size={16} /></span>
+                    <span style={{ color: 'var(--primary-color)', marginLeft: '0.5rem', flexShrink: 0 }}><Edit size={16} /></span>
                   </div>
                 </div>
               );

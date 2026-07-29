@@ -114,17 +114,20 @@ const SubjectDashboard = ({ sessionUser }) => {
                           <div 
                             key={student.id}
                             className="hover-bg"
-                            style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                            style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', cursor: 'pointer', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}
                             onClick={() => handleStudentClick(student, subject.name)}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '130px' }}>
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#F3F4F6', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem', flexShrink: 0 }}>
                                 {student.name.charAt(0)}
                               </div>
-                              <div style={{ fontWeight: 600 }}>{student.name}</div>
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ fontWeight: 600, wordBreak: 'keep-all' }}>{student.name}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', wordBreak: 'break-all' }}>{student.id}</div>
+                              </div>
                             </div>
                             
-                            <div>
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                               {mySubjectReport ? (
                                 mySubjectReport.status === 'draft' ? (
                                   <span className="badge" style={{ backgroundColor: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}>
